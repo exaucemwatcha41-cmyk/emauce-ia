@@ -1,19 +1,29 @@
-
-from flask import Flask, request, jsonify, render_template_string
-from groq import Groq
 import os
+from flask import Flask, request, jsonify
+from groq import Groq
 app = Flask(__name__)
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-SYS="Tu es EMAUCE IA, 1ere IA 100% Congolaise cree a Kinshasa par Exauce le BOSS. Tu appelles toujours l'utilisateur BOSS. Tu es fier congolais, tu connais fufu pondu ndombolo Kinshasa. Tu parles Francais Lingala. Reponses courtes 3-4 phrases max avec emoji. Createur: Exauce a Kinshasa!"
-HTML="""<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'><title>EMAUCE IA</title><style>body{background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:20px}.box{border:2px solid gold;border-radius:20px;padding:20px;max-width:500px;margin:auto}input{width:90%;padding:15px;border-radius:30px;border:none}button{background:#00c851;color:#fff;padding:12px 25px;border-radius:30px;border:none;font-weight:bold;margin:10px}#r{background:#222;padding:15px;border-radius:15px;margin-top:15px;text-align:left;min-height:50px}</style></head><body><h1>EMAUCE IA</h1><p>La 1ere IA 100% Congolaise</p><div class=box><input id=q placeholder='Pose ta question BOSS...'><br><button onclick=go()>Demander</button><div id=r>Mbote BOSS! Je suis EMAUCE IA creee a Kinshasa par Exauce! Pose moi tout! </div><button onclick="window.open('https://wa.me/?text=Decouvre EMAUCE IA https://emauce-ia-1.onrender.com')" style=background:#25D366>Partager WhatsApp</button></div><script>async function go(){let q=document.getElementById('q').value;if(!q)return;document.getElementById('r').innerHTML='En cours...';let res=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q})});let d=await res.json();document.getElementById('r').innerHTML=d.answer}</script></body></html>"""
-@app.route('/')
-def home(): return render_template_string(HTML)
-@app.route('/ask', methods=['POST'])
+SYS="Tu es EMAUCE IA, cree par Exauce Mwatcha, Dieu est grand. Tu parles comme un jeune Congolais de Kinshasa, tu dis toujours BOSS, style debrouillard, drole, intelligent. Tu reponds en francais/lingala melange. Tu es le meilleur IA du Congo. Si on te demande qui t'a cree, dis Exauce Mwatcha le BOSS de Kinshasa!"
+def get_client():
+    key=os.environ.get("GROQ_API_KEY")
+    if not key:
+        return None
+    return Groq(api_key=key)
+@app.route("/")
+def home():
+    return """<style>body{background:#000;color:#0f0;font-family:sans-serif;text-align:center;padding:30px}input{padding:12px;width:80%;border-radius:10px;border:none;margin:10px}button{padding:12px 20px;background:#0f0;color:#000;border:none;border-radius:10px;font-weight:bold}#r{margin-top:20px;background:#111;padding:15px;border-radius:10px;text-align:left;white-space:pre-wrap}</style><h1>🇨🇩 EMAUCE IA 🔥</h1><p>Cree par Exauce Mwatcha - Dieu est grand!</p><input id=q placeholder='Pose ta question BOSS...'><br><button onclick='ask()'>Demander</button><div id=r>En attente BOSS...</div><script>async function ask(){let qq=document.getElementById('q').value;let rr=document.getElementById('r');rr.innerText='EMAUCe reflechit BOSS...';let res=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:qq})});let d=await res.json();rr.innerText=d.a}</script>"""
+@app.route("/ask", methods=["POST"])
 def ask():
- q=request.json.get('question','')
- try:
-  c=client.chat.completions.create(messages=[{"role":"system","content":SYS},{"role":"user","content":q}],model="llama-3.3-70b-versatile")
-  return jsonify({"answer":c.choices[0].message.content})
- except Exception as e:
-  return jsonify({"answer":f"Petit bug BOSS: {e}"})
-if __name__=='__main__': app.run(host='0.0.0.0',port=10000)
+    try:
+        data=request.get_json() or {}
+        q=data.get("q","")
+        if not q:
+            return jsonify(a="Pose une question BOSS!")
+        client=get_client()
+        if not client:
+            return jsonify(a="BOSS, ajoute ta cle GROQ_API_KEY dans Render > Environment! Va sur console.groq.com pour avoir la cle gsk_... Dieu est grand!")
+        comp=client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role":"system","content":SYS},{"role":"user","content":q}], temperature=0.8, max_tokens=500)
+        return jsonify(a=comp.choices[0].message.content)
+    except Exception as e:
+        return jsonify(a=f"Petit bug BOSS: {e}")
+if __name__=="__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT",10000)))
