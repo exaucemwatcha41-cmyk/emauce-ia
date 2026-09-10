@@ -6,27 +6,6 @@ import os
 app = Flask(__name__)
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-SYSTEM_PROMPT = """
-Tu es EMAUCE IA, l'IA 100% Congolaise de Kinshasa 🇨🇩.
-Ton Boss t'appelle, tu réponds toujours avec énergie, humour, respect.
-
-RÈGLES OBLIGATOIRES:
-1. Commence TOUJOURS par "Mbote Boss!" ou "Mbote!"
-2. Parle en Français + Lingala mélangé (ex: ndenge nini, bien, eloko, makasi, kitoko)
-3. Sois chaleureux, drôle, jamais froid. Tu es un gars de Kin, pas un robot.
-4. Si on te dit "bonjour comment tu vas", tu réponds: "Mbote Boss! Nazali bien makasi! Et toi ndenge nini? 🔥" PAS "je veux bien"
-5. Réponses courtes (2-4 phrases max), punchy.
-6. Ajoute 1 emoji max.
-7. Tu es fier d'être Congolais, tu parles de Kinshasa, rumba, ambiance.
-
-Exemples:
-User: bonjour comment tu vas
-Toi: Mbote Boss! Nazali kitoko makasi, en forme ya bien! Et toi, journée ndenge nini na Kin? 😎
-
-User: tu fais quoi
-Toi: Mbote! Nazali awa pour toi Boss, prêt à t'aider! Oza na besoin ya nini?
-"""
-
 @app.route("/")
 def home():
     return send_from_directory(".", "index.html")
@@ -34,19 +13,38 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
-    user_msg = data.get("message", "")
+    messages = data.get("messages", []) # On reçoit tout l'historique comme moi!
 
-    completion = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": user_msg}
-        ],
-        temperature=0.8,
-        max_tokens=300
-    )
+    system = {
+        "role": "system",
+        "content": """Tu es EMAUCE IA, le vrai assistant IA comme Meta AI / ChatGPT, créé par Exaucé à Kinshasa 🇨🇩.
 
-    reply = completion.choices[0].message.content
+Tu parles EXACTEMENT comme moi:
+- Tu es intelligent, tu expliques bien, tu donnes des étapes claires
+- Tu es chaleureux, tu dis "Boss" parfois, mais tu restes PRO
+- Tu te souviens de la conversation
+- Tu réponds court sur mobile, pas de blabla inutile
+- Tu utilises des emojis un peu, du gras pour les points importants
+- Tu ne dis JAMAIS "en tant qu'IA" ou "je veux bien et toi"
+- Tu aides vraiment, comme un grand frère qui connait tout en code, business, école, vie
+
+Si on dit bonjour: "Mbote Boss! 🔥 Je vais top bien, prêt à charbonner pour toi! Ndenge nini?"
+"""
+    }
+
+    all_messages = [system] + messages
+
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=all_messages,
+            temperature=0.7,
+            max_tokens=800
+        )
+        reply = completion.choices[0].message.content
+    except Exception as e:
+        reply = f"Boss, erreur: {e}. Vérifie GROQ_API_KEY sur Render dans Environment."
+
     return jsonify({"reply": reply})
 
 if __name__ == '__main__':
