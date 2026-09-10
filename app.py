@@ -1,10 +1,10 @@
-import os
 from flask import Flask, request, jsonify
+import os
 from groq import Groq
 
 app = Flask(__name__)
 
-SYS = "Tu es EMAUCE IA, cree par Exauce Mwatcha, une IA 100% Congolaise 🇨🇩. Tu es fiere, intelligente, tu aides tout le monde."
+SYS = "Tu es EMAUCE IA, cree par Exauce Mwatcha, une IA congolaise fiere, intelligente, qui aide tout le monde. Tu reponds en lingala, francais, anglais selon la question. Tu es le meilleur."
 
 def get_client():
     key = os.environ.get("GROQ_API_KEY")
@@ -12,26 +12,6 @@ def get_client():
         return None
     return Groq(api_key=key)
 
-@app.route("/")
+@app.route('/')
 def home():
-    return """<style>body{background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:20px}input{width:80%;padding:15px;border-radius:25px;border:none;margin-top:20px}button{padding:15px 25px;border-radius:25px;border:none;background:#0a84ff;color:#fff;margin-left:10px}#chat{max-width:600px;margin:auto;text-align:left;height:60vh;overflow-y:auto;border:1px solid #333;padding:15px;border-radius:15px}</style><h2>🇨🇩 EMAUCE IA 🇨🇩</h2><p>La premiere IA 100% Congolaise par Exauce</p><div id=chat></div><div><input id=q placeholder='Pose ta question...'><button onclick=ask()>Envoyer</button></div><script>async function ask(){let q=document.getElementById('q').value;if(!q)return;let c=document.getElementById('chat');c.innerHTML+=`<div style=background:#0a84ff;padding:10px;border-radius:10px;margin:8px>👤 ${q}</div>`;document.getElementById('q').value='';let r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q})});let d=await r.json();c.innerHTML+=`<div style=background:#333;padding:10px;border-radius:10px;margin:8px>🤖 ${d.reply}</div>`;c.scrollTop=c.scrollHeight}</script>"""
-
-@app.route("/ask", methods=["POST"])
-@app.route("/chat", methods=["POST"])
-def ask():
-    try:
-        data = request.get_json() or {}
-        msg = data.get("message","")
-        client = get_client()
-        if not client:
-            return jsonify({"reply": "BOSS clé GROQ non trouvée! Va sur Render > Environment > GROQ_API_KEY"})
-        comp = client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=[{"role":"system","content":SYS},{"role":"user","content":msg}]
-        )
-        return jsonify({"reply": comp.choices[0].message.content})
-    except Exception as e:
-        return jsonify({"reply": f"Erreur: {str(e)}"})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    return """<style>body{background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:20px}</style><h1>🇨🇩 EMAUCE IA LIVE</h1><p>La premiere IA 100% Congolaise par Exauce</p><div id="chat" style="max-width:600px;margin:auto;text-align:left;background:#111;padding:15px;border-radius:10px;height:300px;overflow-y:auto"></div><div style="max-width:600px;margin:15px auto;display:flex"><input id="q" placeholder="Pose ta question..." style="flex:1;padding:12px;border-radius:8px;border:none"><button onclick="send()" style="padding:12px 20px;margin-left:10px;background:#00f;color:#fff;border:none;border-radius:8px">Envoyer</button></div><script>async function send(){let i=document.getElementById('q');let q=i.value;if(!q)return;let c=document.getElementById('chat');c.innerHTML+='<div><b>Toi:</b> '+q+'</div>';i.value='';let r=await fetch('/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q})});let d=await r.json();c.innerHTML+='<div style=\"margin:10px 0;color:#0f0\"><b>EMAUCE:</b> '+d
