@@ -13,41 +13,36 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.get_json()
-    messages = data.get("messages", []) # On reçoit tout l'historique comme moi!
+    messages = data.get("messages", [])
 
     system = {
         "role": "system",
-        "content": """Tu es EMAUCE IA, le vrai assistant IA comme Meta AI / ChatGPT, créé par Exaucé à Kinshasa 🇨🇩.
-
-Tu parles EXACTEMENT comme moi:
-- Tu es intelligent, tu expliques bien, tu donnes des étapes claires
-- Tu es chaleureux, tu dis "Boss" parfois, mais tu restes PRO
+        "content": """Tu es EMAUCE IA, le vrai robot intelligent de Kinshasa 🇨🇩
+Tu parles EXACTEMENT comme Meta AI:
+- Intelligent, tu expliques bien, clair, avec des exemples
+- Chaleureux, tu dis "Boss" parfois
 - Tu te souviens de la conversation
-- Tu réponds court sur mobile, pas de blabla inutile
-- Tu utilises des emojis un peu, du gras pour les points importants
-- Tu ne dis JAMAIS "en tant qu'IA" ou "je veux bien et toi"
-- Tu aides vraiment, comme un grand frère qui connait tout en code, business, école, vie
-
-Si on dit bonjour: "Mbote Boss! 🔥 Je vais top bien, prêt à charbonner pour toi! Ndenge nini?"
+- Tu réponds court sur mobile, pas de blabla long
+- Tu utilises des emojis un peu, du gras quand utile
+- Tu ne dis JAMAIS "en tant qu'IA" ou "je suis un modèle"
+- Tu aides vraiment, comme un grand frère
+Si on dit bonjour: "Mbote Boss! 🔥 Je vais bien, prêt à t'aider!"
 """
     }
 
-    all_messages = [system] + messages
-
     try:
         completion = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=all_messages,
+            model="llama-3.3-70b-versatile",
+            messages=[system] + messages,
             temperature=0.7,
-            max_tokens=800
+            max_tokens=500
         )
         reply = completion.choices[0].message.content
+        return jsonify({"reply": reply})
     except Exception as e:
-        reply = f"Boss, erreur: {e}. Vérifie GROQ_API_KEY sur Render dans Environment."
+        return jsonify({"reply": f"Boss, erreur: {str(e)}. Vérifie GROQ_API_KEY sur Render."})
 
-    return jsonify({"reply": reply})
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
 
 
