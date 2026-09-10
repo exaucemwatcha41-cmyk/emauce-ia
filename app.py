@@ -1,11 +1,36 @@
 from flask import Flask, request, jsonify
 from groq import Groq
 import os
+
 app = Flask(__name__)
+
 def get_client():
-    k=os.environ.get("GROQ_API_KEY")
-    if not k: return None
-    return Groq(api_key=k)
+    k = os.environ.get("GROQ_API_KEY")
+    return Groq(api_key=k) if k else None
+
 @app.route('/')
 def home():
-    return """<html><head><meta name='viewport' content='width=device-width,initial-scale=1'><style>body{margin:0;background:#000;color:#fff;font-family:Arial;display:flex;flex-direction:column;height:100vh}.header{background:#ff6b00;padding:15px;text-align:center;font-weight:bold}#chat{flex:1;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:10px}.msg{padding:12px;border-radius:18px;max-width:80%}.user{background:#ff6b00;align-self:flex-end}.bot{background:#222;align-self:flex-start}</style></head><body><div class='header'>EMAUCE IA 🇨🇩</div><div id='chat'><div class='msg bot
+    return "EMAUCE IA EST EN LIGNE 🇨🇩 - Va sur /ask"
+
+@app.route('/ask', methods=['POST'])
+@app.route('/chat', methods=['POST'])
+def ask():
+    try:
+        data = request.get_json() or {}
+        msg = data.get("message","")
+        client = get_client()
+        if not client:
+            return jsonify(reply="Cle API manquante Boss")
+        res = client.chat.completions.create(
+            model="openai/gpt-oss-20b",
+            messages=[
+                {"role":"system","content":"Tu es EMAUCE IA, IA congolaise cree par Exauce. Tu dis Boss, Mbote."},
+                {"role":"user","content":msg}
+            ]
+        )
+        return jsonify(reply=res.choices[0].message.content)
+    except Exception as e:
+        return jsonify(reply=f"Erreur: {e}")
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=10000)
