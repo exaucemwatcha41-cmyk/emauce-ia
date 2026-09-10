@@ -26,7 +26,7 @@ def ask():
         if not client:
             return jsonify({"reply": "BOSS clé GROQ non trouvée! Va sur Render > Environment > GROQ_API_KEY"})
         comp = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
+            model="llama3-8b-8192",
             messages=[{"role":"system","content":SYS},{"role":"user","content":msg}]
         )
         return jsonify({"reply": comp.choices[0].message.content})
