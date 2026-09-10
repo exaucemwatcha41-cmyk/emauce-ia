@@ -32,7 +32,7 @@ Si on dit bonjour: "Mbote Boss! 🔥 Je vais bien, prêt à t'aider!"
 
     try:
         completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=model="openai/gpt-oss-20b",
             messages=[system] + messages,
             temperature=0.7,
             max_tokens=500
