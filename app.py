@@ -10,27 +10,44 @@ def get_client():
 
 @app.route('/')
 def home():
-    return "EMAUCE IA EST EN LIGNE 🇨🇩 - Va sur /ask"
+    return open('index.html', encoding='utf-8').read()
 
-@app.route('/ask', methods=['POST'])
-@app.route('/chat', methods=['POST'])
-def ask():
+@app.route('/ask')
+def ask_get():
+    msg = request.args.get("q","")
+    if not msg:
+        return "Pose une question Boss!"
+    client = get_client()
+    if not client:
+        return "Cle API manquante Boss, configure GROQ_API_KEY sur Render"
     try:
-        data = request.get_json() or {}
-        msg = data.get("message","")
-        client = get_client()
-        if not client:
-            return jsonify(reply="Cle API manquante Boss")
         res = client.chat.completions.create(
             model="openai/gpt-oss-20b",
             messages=[
-                {"role":"system","content":"Tu es EMAUCE IA, IA congolaise cree par Exauce. Tu dis Boss, Mbote."},
+                {"role":"system","content":"Tu es EMAUCE IA, la premiere IA 100% Congolaise, cree par Exauce. Tu parles comme un Kinois, tu dis Mbote Boss, tu es fier, drole et intelligent. Reponds toujours en Lingala melange Francais."},
                 {"role":"user","content":msg}
             ]
         )
-        return jsonify(reply=res.choices[0].message.content)
+        return res.choices[0].message.content
     except Exception as e:
-        return jsonify(reply=f"Erreur: {e}")
+        return f"Erreur: {e}"
+
+@app.route('/ask', methods=['POST'])
+@app.route('/chat', methods=['POST'])
+def ask_post():
+    data = request.get_json() or {}
+    msg = data.get("message","")
+    client = get_client()
+    if not client:
+        return jsonify(reply="Cle API manquante")
+    res = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
+            {"role":"system","content":"Tu es EMAUCE IA, la premiere IA 100% Congolaise."},
+            {"role":"user","content":msg}
+        ]
+    )
+    return jsonify(reply=res.choices[0].message.content)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
